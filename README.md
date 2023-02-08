@@ -5,7 +5,7 @@
 ## About the contract
 The contract functionality includes :
 - Swaping any erc20 token for eth
-- withdrawing eth from contract
+- withdrawing eth from contract, since contract does'nt direclty send eth to user when swapped
 
 Functions :
 - `swapTokenForEth(address _token, uint _amount)` is the main function by which user can swap token for eth
