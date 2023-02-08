@@ -47,3 +47,15 @@ NOTE: Addresses may be diffrent depending upon network
     ```
     npx hardhat test
     ```
+
+## Web3 Scripts
+- Scripts are avalibale in `web3Scripts` folder
+- can run the script just calling the function
+- Requires :
+    - An Api key of goerli chain
+    - an private key of account which has atleast 1 eth in balance
+- Functionality :
+    - Add liquidity or creating the new pair
+    - approving contracts 
+    - swaping token with swap contract
+    - should amount out before swaping 
