@@ -20,13 +20,24 @@ contract tradeForEth {
     // 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
     address private immutable WETH;
     mapping(address => uint) public userBalances;
+    bool functionInUsed = false;
+
+    event ethWithdraw(address indexed to, uint amount);
+    event swap(address indexed token, address indexed user, uint amount);
 
     constructor(address _UNISWAP_V2_ROUTER, address _WETH) {
         UNISWAP_V2_ROUTER = _UNISWAP_V2_ROUTER;
         WETH = _WETH;
     }
 
-    function swapTokenForEth(address _token, uint _amount) public returns(bool){
+    modifier reentrancyGuard() {
+        require(!functionInUsed,"reentrancy: function already in used");
+        functionInUsed = true;
+        _;
+        functionInUsed = false;
+    }
+
+    function swapTokenForEth(address _token, uint _amount) public reentrancyGuard returns(bool){
         require(_token != address(0),"Invalid address");
         require(_amount > 0,"Invalid amount");
         require(IERC20(_token).allowance(msg.sender,address(this)) >= _amount,"Insufficient approve amount");
@@ -49,15 +60,30 @@ contract tradeForEth {
         // storing in mapping
         userBalances[msg.sender] += balanceOfEthofUser;
 
+        emit swap(_token, msg.sender, _amount);
+
         return true;
     }
 
-    function CheckBalanceOfUser(address _token) external view returns(uint){
-        return IERC20(_token).balanceOf(msg.sender);
+    function withdrawEth() external reentrancyGuard returns(bool){
+        require(userBalances[msg.sender] > 0,"Insufficient balance to transfer");
+        uint amountToSend = userBalances[msg.sender];
+
+        userBalances[msg.sender] = 0; // resetting users balance first
+
+        (bool success,) = msg.sender.call{value: amountToSend}("");
+        require(success,"transfer of eth failed");
+
+        emit ethWithdraw(msg.sender,amountToSend);
+
+        return true;
     }
 
-    receive() external payable {
-        
+    // to receive eth 
+    receive() external payable {}
+
+    function getBalanceOfUser() external view returns(uint){
+        return userBalances[msg.sender];
     }
 }
 
