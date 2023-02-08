@@ -7,6 +7,7 @@ const erc20Abi = require('../abi/erc20.json')
 
 
 describe("Swap Contract", function () {
+
     // fixture for code reusbality by getting the same state of blockchain
     async function deployContractAndImpersonateAccount() {
         const [addr1, addr2, addr3] = await ethers.getSigners()
@@ -26,6 +27,22 @@ describe("Swap Contract", function () {
         return { UniswapRouterContract, UsdcContract, SwapContract, addr1, addr2, addr3, address, USDCimpersonatedSigner }
     }
 
+    describe("Contract functionality", function(){
+        describe("Validation", function(){
+            it("contract should accept direct eth",async function(){
+                const { USDCimpersonatedSigner, SwapContract, address } = await loadFixture(deployContractAndImpersonateAccount);
+                let balanceOfContractBefore = await ethers.provider.getBalance((await SwapContract).address);
+                console.log("Balance of contract before sending ETH into contract ",balanceOfContractBefore);
+                expect(balanceOfContractBefore).to.be.equal(0);
+                await USDCimpersonatedSigner.sendTransaction({to: (await SwapContract).address, value: ethers.utils.parseEther('0.1')})
+
+                let balanceOfContractAfter = await ethers.provider.getBalance((await SwapContract).address);
+                console.log("Balance of contract after sending ETH ", balanceOfContractAfter)
+
+                expect(balanceOfContractAfter).to.be.greaterThan(balanceOfContractBefore)
+            })
+        })
+    })
     describe("Impersonate account", function () {
         describe("Validation", function(){
             it("Should send eth from impersonate account to other", async function () {
@@ -49,7 +66,6 @@ describe("Swap Contract", function () {
                 let balanceOfSigner4 = await ethers.provider.getBalance(address);
                 const balance4 = ethers.utils.formatEther(balanceOfSigner4);
                 console.log("Balance of after address to send : ", balance4);
-    
             })
         })
         describe("Event",function (){
@@ -59,6 +75,22 @@ describe("Swap Contract", function () {
     })
     describe("Pefrom swap", function () {
         describe("Validation",function(){
+            it("should through error when user pass any invlaid address", async function(){
+                const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
+
+                await expect((await SwapContract).swapTokenForEth(ethers.constants.AddressZero,1000000)).to.be.revertedWith('Invalid address');
+
+            })
+            it("should throw error when user gives invalid amount input", async function (){
+                const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
+
+                await expect((await SwapContract).swapTokenForEth(UsdcContract.address, 0)).to.be.revertedWith('Invalid amount');
+            })
+            it("should throw error when user does not approve the requirement amount of token to this contract", async function(){
+                const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
+
+                await expect((await SwapContract).swapTokenForEth(UsdcContract.address, 10000)).to.be.revertedWith('Insufficient approve amount')
+            })
             it("should approve the contract in order to perform swap", async function () {
                 const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
     
@@ -114,6 +146,11 @@ describe("Swap Contract", function () {
     })
     describe("Withdraw eth", function () {
         describe("Validation", function(){
+            it("should throw error when there is zero balace of user in contract", async function(){
+                const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
+
+                await expect((await SwapContract).withdrawEth()).to.be.revertedWith('Insufficient balance to transfer')
+            })
             it("should withdraw eth after performing swap", async function () {
                 const { USDCimpersonatedSigner, UsdcContract, SwapContract } = await loadFixture(deployContractAndImpersonateAccount);
     

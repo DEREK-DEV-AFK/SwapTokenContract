@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('dotenv').config()
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -7,10 +8,14 @@ module.exports = {
     timeout: 100000000
   },
   networks: {
-    hardhat: {
-      forking: {
-        url: "https://eth-mainnet.g.alchemy.com/v2/7srgzJk3kbhlr7vmHIFDPqv95CbnD9qT",
-      }
-    }
+    goerli: {
+      url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMYKEYGOERLI}`,
+      accounts: [process.env.GOERLI_PRIVATE_KEY],
+    },
+    // hardhat: {
+    //   forking: {
+    //     url: "https://eth-mainnet.g.alchemy.com/v2/7srgzJk3kbhlr7vmHIFDPqv95CbnD9qT",
+    //   }
+    // }
   }
 };

@@ -16,9 +16,9 @@ interface IERC20 {
 
 contract tradeForEth {
     // 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
-    address private immutable UNISWAP_V2_ROUTER;
+    address public immutable UNISWAP_V2_ROUTER;
     // 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
-    address private immutable WETH;
+    address public immutable WETH;
     mapping(address => uint) public userBalances;
     bool functionInUsed = false;
 
